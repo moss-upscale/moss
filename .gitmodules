@@ -1,3 +1,6 @@
 [submodule "moss-model"]
 	path = moss-model
 	url = https://github.com/Lortunate/moss-model
+[submodule "models"]
+	path = models
+	url = https://huggingface.co/MossUpscayl/moss-useage-models
