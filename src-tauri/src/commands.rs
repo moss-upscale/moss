@@ -1,5 +1,7 @@
 use log::{error, info};
 use std::sync::Mutex;
+use tauri::path::BaseDirectory;
+use tauri::Manager;
 use tauri::State;
 
 pub struct ProcessingState {
@@ -16,16 +18,17 @@ impl Default for ProcessingState {
 
 #[tauri::command]
 pub async fn upscale_image(
+    handle: tauri::AppHandle,
     input_path: String,
-    model_path: String,
+    model_filename: String,
     base_scale: f64,
     target_scale: f64,
     output_dir: String,
     state: State<'_, ProcessingState>,
 ) -> Result<String, String> {
     info!(
-        "upscale_image: enter | input_path={}, model_path={}, base_scale={}, target_scale={}, output_dir={}",
-        input_path, model_path, base_scale, target_scale, output_dir
+        "upscale_image: enter | input_path={}, model_filename={}, base_scale={}, target_scale={}, output_dir={}",
+        input_path, model_filename, base_scale, target_scale, output_dir
     );
     // create and register cancellation token for this task
     let token = moss_model::CancellationToken::new();
@@ -39,43 +42,27 @@ pub async fn upscale_image(
 
     let res = tauri::async_runtime::spawn_blocking({
         let input_path = input_path.clone();
-        let model_path = model_path.clone();
+        let model_filename = model_filename.clone();
         let output_dir = output_dir.clone();
         let token = token.clone();
+        let handle = handle.clone();
 
         move || -> Result<String, String> {
             use moss_model::{RealEsrgan, SrPipeline};
             use opencv::imgcodecs;
             use std::path::{Path, PathBuf};
 
-            let resolve_model_path = |mp: &str| -> Result<PathBuf, String> {
-                let p = Path::new(mp);
-                if p.exists() {
-                    return Ok(p.to_path_buf());
-                }
-                let cwd =
-                    std::env::current_dir().map_err(|e| format!("resolve cwd failed: {}", e))?;
-                let candidates = [cwd.join("models").join(mp), cwd.join("../models").join(mp)];
-                if let Some(found) = candidates.iter().find(|p| p.exists()).cloned() {
-                    info!(
-                        "Resolved model path via fallback: {}",
-                        found.to_string_lossy()
-                    );
-                    Ok(found)
-                } else {
-                    Err(format!(
-                        "model file not found: {} (tried: {}, {})",
-                        mp,
-                        candidates[0].to_string_lossy(),
-                        candidates[1].to_string_lossy()
-                    ))
-                }
-            };
+            let resolve_model_path =
+                |h: &tauri::AppHandle, filename: &str| -> Result<PathBuf, String> {
+                    h.path()
+                        .resolve(&format!("models/{}", filename), BaseDirectory::Resource)
+                        .map_err(|e| format!("resolve resource path failed: {}", e))
+                };
 
             let input_mat = imgcodecs::imread(&input_path, imgcodecs::IMREAD_UNCHANGED)
                 .map_err(|e| format!("Failed to read input image: {}", e))?;
 
-            let model_path_resolved = resolve_model_path(&model_path)?;
+            let model_path_resolved = resolve_model_path(&handle, &model_filename)?;
 
             let model = RealEsrgan::from_path(&model_path_resolved)
                 .map_err(|e| format!("Failed to load model: {}", e))?;
