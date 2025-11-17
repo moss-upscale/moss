@@ -24,6 +24,7 @@ jobs:
     outputs:
       opencv_version: ${{ steps.cfg.outputs.opencv_version }}
       build_list: ${{ steps.cfg.outputs.build_list }}
+      shared: ${{ steps.cfg.outputs.shared }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,6 +48,7 @@ jobs:
       runner: ubuntu-22.04
       opencv_version: ${{ needs.config.outputs.opencv_version }}
       build_list: ${{ needs.config.outputs.build_list }}
+      shared: ${{ needs.config.outputs.shared }}
 
   opencv-windows:
     needs: config
@@ -55,6 +57,7 @@ jobs:
       runner: windows-latest
       opencv_version: ${{ needs.config.outputs.opencv_version }}
       build_list: ${{ needs.config.outputs.build_list }}
+      shared: ${{ needs.config.outputs.shared }}
 
   opencv-macos:
     needs: config
@@ -63,6 +66,7 @@ jobs:
       runner: macos-latest
       opencv_version: ${{ needs.config.outputs.opencv_version }}
       build_list: ${{ needs.config.outputs.build_list }}
+      shared: ${{ needs.config.outputs.shared }}
 
   opencv-macos-intel:
     needs: config
@@ -71,6 +75,7 @@ jobs:
       runner: macos-15-intel
       opencv_version: ${{ needs.config.outputs.opencv_version }}
       build_list: ${{ needs.config.outputs.build_list }}
+      shared: ${{ needs.config.outputs.shared }}
 
   tauri-build:
     name: Tauri Build (${{ matrix.platform }})
@@ -117,6 +122,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt install -y libavif-dev
       - name: Install LLVM/Clang
         if: matrix.platform == 'ubuntu-22.04'
         uses: KyleMayes/install-llvm-action@v2
@@ -126,6 +132,7 @@ jobs:
         if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-15-intel'
         run: |
           brew install llvm
+          brew install libavif
           echo "CLANG_PATH=$(brew --prefix llvm)/bin/clang" >> $GITHUB_ENV
           echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> $GITHUB_ENV
           echo "DYLD_FALLBACK_LIBRARY_PATH=$(brew --prefix llvm)/lib" >> $GITHUB_ENV
@@ -146,6 +153,12 @@ jobs:
             --modules-hash "${{ env.OPENCV_MODULES_HASH }}" \
             --build-list "${{ needs.config.outputs.build_list }}" \
             --github-output "$GITHUB_OUTPUT"
+      - name: Generate Rust link args
+        id: linkargs
+        run: |
+          python3 .github/tools/opencv_ci.py export-rustflags \
+            --link-paths "${{ steps.export.outputs.opencv_link_paths }}" \
+            --github-output "$GITHUB_OUTPUT"
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -157,27 +170,17 @@ jobs:
           cache-all-crates: true
       - name: Install frontend dependencies
         run: bun install
-      - name: Build app (tag)
-        if: github.ref_type == 'tag'
-        uses: tauri-apps/tauri-action@v0
+      - name: Build app
         env:
           OPENCV_LINK_LIBS: ${{ steps.export.outputs.opencv_link_libs }}
           OPENCV_LINK_PATHS: ${{ steps.export.outputs.opencv_link_paths }}
           OPENCV_INCLUDE_PATHS: ${{ steps.export.outputs.opencv_include_paths }}
-        with:
-          args: ${{ matrix.args }} -- -vv
-      - name: Build app (non-tag)
-        if: github.ref_type != 'tag'
-        env:
-          OPENCV_LINK_LIBS: ${{ steps.export.outputs.opencv_link_libs }}
-          OPENCV_LINK_PATHS: ${{ steps.export.outputs.opencv_link_paths }}
-          OPENCV_INCLUDE_PATHS: ${{ steps.export.outputs.opencv_include_paths }}
+          RUSTFLAGS: ${{ steps.linkargs.outputs.rustflags }}
         run: bun run tauri build ${{ matrix.args }} -- -vv
       - name: Detect arch
         id: arch
         run: echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
-      - name: Upload bundles (non-tag)
-        if: github.ref_type != 'tag'
+      - name: Upload bundles
         uses: actions/upload-artifact@v4
         with:
           name: tauri-bundles-${{ matrix.platform }}-${{ steps.arch.outputs.arch }}-${{ github.run_id }}

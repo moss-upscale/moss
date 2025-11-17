@@ -1,4 +1,5 @@
 {
   "version": "4.12.0",
-  "build_list": "core,imgproc,imgcodecs,dnn"
+  "build_list": "core,imgproc,imgcodecs,dnn",
+  "shared": "OFF"
 }

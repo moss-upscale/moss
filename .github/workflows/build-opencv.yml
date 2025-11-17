@@ -9,6 +9,10 @@ on:
       build_list:
         required: true
         type: string
+      shared:
+        required: false
+        type: string
+        default: OFF
       cache_namespace:
         required: false
         type: string
@@ -62,6 +66,7 @@ jobs:
             --cache-namespace "${{ inputs.cache_namespace }}" \
             --build-list "${{ inputs.build_list }}" \
             --opencv-version "${{ inputs.opencv_version }}" \
+            --shared "${{ inputs.shared }}" \
             --github-output "$GITHUB_OUTPUT"
       - name: Restore OpenCV cache
         id: cache_restore
@@ -98,7 +103,8 @@ jobs:
             --opencv-version "${{ inputs.opencv_version }}" \
             --build-list "${{ inputs.build_list }}" \
             --modules-hash "${{ steps.key.outputs.modules_hash }}" \
-            --workspace "$GITHUB_WORKSPACE"
+            --workspace "$GITHUB_WORKSPACE" \
+            --shared "${{ inputs.shared }}"
       - name: Save OpenCV cache
         if: steps.cache_restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4

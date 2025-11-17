@@ -100,14 +100,16 @@ def common_cmake_args(opts: BuildOptions) -> list[str]:
         "-DBUILD_PERF_TESTS=OFF",
         "-DBUILD_EXAMPLES=OFF",
         "-DBUILD_SHARED_LIBS=" + opts.shared,
+        "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
         "-DCMAKE_CXX_STANDARD=17",
         "-DCMAKE_CXX_STANDARD_REQUIRED=ON",
         "-DCMAKE_C_STANDARD=11",
         "-DCMAKE_C_STANDARD_REQUIRED=ON",
         "-DCMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE=ON",
         "-DOPENCV_FORCE_3RDPARTY_BUILD=ON",
-        "-DWITH_PROTOBUF=ON",
-        "-DBUILD_PROTOBUF=ON",
+        "-DWITH_PROTOBUF=OFF",
+        "-DBUILD_PROTOBUF=OFF",
+        "-DOPENCV_DNN_USE_PROTOBUF=OFF",
     ]
     if opts.os_name == "Darwin":
         args.append("-DCMAKE_OSX_ARCHITECTURES=" + opts.arch)
