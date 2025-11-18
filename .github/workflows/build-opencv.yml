@@ -1,0 +1,140 @@
+name: build-opencv
+run-name: Build OpenCV ${{ inputs.opencv_version }}
+on:
+  workflow_call:
+    inputs:
+      opencv_version:
+        required: true
+        type: string
+      build_list:
+        required: true
+        type: string
+      shared:
+        required: false
+        type: string
+        default: OFF
+      cache_namespace:
+        required: false
+        type: string
+        default: opencv
+      runner:
+        required: true
+        type: string
+    outputs:
+      opencv_link_libs:
+        value: ${{ jobs.build.outputs.opencv_link_libs }}
+      opencv_link_paths:
+        value: ${{ jobs.build.outputs.opencv_link_paths }}
+      opencv_include_paths:
+        value: ${{ jobs.build.outputs.opencv_include_paths }}
+      cache_hit:
+        value: ${{ jobs.build.outputs.cache_hit }}
+      modules_hash:
+        value: ${{ jobs.build.outputs.modules_hash }}
+permissions:
+  contents: read
+concurrency:
+  group: opencv-${{ inputs.runner }}-${{ inputs.opencv_version }}-${{ inputs.build_list }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      opencv_link_libs: ${{ steps.export.outputs.opencv_link_libs }}
+      opencv_link_paths: ${{ steps.export.outputs.opencv_link_paths }}
+      opencv_include_paths: ${{ steps.export.outputs.opencv_include_paths }}
+      cache_hit: ${{ steps.cache_restore.outputs.cache-hit }}
+      modules_hash: ${{ steps.key.outputs.modules_hash }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compute cache key
+        id: key
+        run: |
+          python3 .github/tools/opencv_ci.py compute-key \
+            --cache-namespace "${{ inputs.cache_namespace }}" \
+            --build-list "${{ inputs.build_list }}" \
+            --opencv-version "${{ inputs.opencv_version }}" \
+            --shared "${{ inputs.shared }}" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Restore OpenCV cache
+        id: cache_restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/.opencv/${{ inputs.opencv_version }}/${{ steps.key.outputs.modules_hash }}
+          key: ${{ steps.key.outputs.cache_key }}
+          restore-keys: |
+            ${{ inputs.cache_namespace }}-${{ runner.os }}-${{ inputs.opencv_version }}-
+            ${{ inputs.cache_namespace }}-${{ runner.os }}-
+            ${{ inputs.cache_namespace }}-
+      - name: Install build tools (macOS)
+        if: steps.cache_restore.outputs.cache-hit != 'true' && runner.os == 'macOS'
+        run: |
+          brew install cmake ninja pkg-config
+      - name: Install build tools (Linux)
+        if: steps.cache_restore.outputs.cache-hit != 'true' && runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config python3
+      - name: Install build tools (Windows)
+        if: steps.cache_restore.outputs.cache-hit != 'true' && runner.os == 'Windows'
+        shell: bash
+        run: |
+          choco install -y ninja || true
+          echo "Windows runner will use preinstalled CMake and MSVC"
+      - name: Setup MSBuild (Windows)
+        if: steps.cache_restore.outputs.cache-hit != 'true' && runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v1.3
+      - name: Build OpenCV using Python
+        if: steps.cache_restore.outputs.cache-hit != 'true'
+        run: |
+          python3 .github/tools/opencv_ci.py build \
+            --opencv-version "${{ inputs.opencv_version }}" \
+            --build-list "${{ inputs.build_list }}" \
+            --modules-hash "${{ steps.key.outputs.modules_hash }}" \
+            --workspace "$GITHUB_WORKSPACE" \
+            --shared "${{ inputs.shared }}"
+      - name: Save OpenCV cache
+        if: steps.cache_restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.opencv/${{ inputs.opencv_version }}/${{ steps.key.outputs.modules_hash }}
+          key: ${{ steps.key.outputs.cache_key }}
+          retention-days: 60
+      - name: Export environment variables using Python
+        id: export
+        run: |
+          python3 .github/tools/opencv_ci.py export-env \
+            --workspace "$GITHUB_WORKSPACE" \
+            --opencv-version "${{ inputs.opencv_version }}" \
+            --modules-hash "${{ steps.key.outputs.modules_hash }}" \
+            --build-list "${{ inputs.build_list }}" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Upload OpenCV artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencv-${{ inputs.runner }}-${{ inputs.opencv_version }}-${{ steps.key.outputs.modules_hash }}
+          path: ${{ github.workspace }}/.opencv/${{ inputs.opencv_version }}/${{ steps.key.outputs.modules_hash }}
+          if-no-files-found: error
+          retention-days: 30
+      - name: Summarize cache status
+        run: |
+          echo "## OpenCV Cache" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Cache key: ${{ steps.key.outputs.cache_key }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Cache hit: ${{ steps.cache_restore.outputs.cache-hit }}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Diagnostic on failure
+        if: failure()
+        run: |
+          echo "## OpenCV build failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Review the job logs above for details." >> "$GITHUB_STEP_SUMMARY"
