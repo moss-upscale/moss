@@ -57,7 +57,7 @@ jobs:
       runner: windows-latest
       opencv_version: ${{ needs.config.outputs.opencv_version }}
       build_list: ${{ needs.config.outputs.build_list }}
-      shared: ${{ needs.config.outputs.shared }}
+      shared: ON
 
   opencv-macos:
     needs: config
@@ -153,6 +153,13 @@ jobs:
             --modules-hash "${{ env.OPENCV_MODULES_HASH }}" \
             --build-list "${{ needs.config.outputs.build_list }}" \
             --github-output "$GITHUB_OUTPUT"
+      - name: Prepare Windows DLL resources
+        if: matrix.platform == 'windows-latest'
+        run: |
+          python3 .github/tools/collect_dlls.py \
+            --lib "${{ steps.export.outputs.opencv_link_paths }}" \
+            --root "$GITHUB_WORKSPACE/.opencv/${{ needs.config.outputs.opencv_version }}/${{ env.OPENCV_MODULES_HASH }}" \
+            --dest "$GITHUB_WORKSPACE/src-tauri/libs"
       - name: Generate Rust link args
         id: linkargs
         run: |
