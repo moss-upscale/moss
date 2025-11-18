@@ -67,8 +67,12 @@ pub async fn upscale_image(
                         .map_err(|e| format!("resolve resource path failed: {}", e))
                 };
 
-            let input_mat = imgcodecs::imread(&input_path, imgcodecs::IMREAD_UNCHANGED)
+            let in_path = Path::new(&input_path);
+            let input_bytes = std::fs::read(in_path)
                 .map_err(|e| format!("Failed to read input image: {}", e))?;
+            let input_buf = opencv::core::Vector::from_slice(&input_bytes);
+            let input_mat = imgcodecs::imdecode(&input_buf, imgcodecs::IMREAD_UNCHANGED)
+                .map_err(|e| format!("Failed to decode input image: {}", e))?;
 
             let model_path_resolved = resolve_model_path(&handle, &model_filename)?;
 
@@ -80,7 +84,6 @@ pub async fn upscale_image(
                 .run_to_scale(input_mat, target_scale.max(1.0), &token)
                 .map_err(|e| format!("Upscale failed: {}", e))?;
 
-            let in_path = Path::new(&input_path);
             let name = in_path
                 .file_stem()
                 .and_then(|s| s.to_str())
@@ -99,10 +102,14 @@ pub async fn upscale_image(
                     .map_err(|e| format!("Failed to create output dir: {}", e))?;
             }
             let out_path = out_dir.join(out_name);
-            let out_path_str = out_path.to_string_lossy().to_string();
-
-            imgcodecs::imwrite(&out_path_str, &out_mat, &opencv::core::Vector::new())
+            let enc_ext = format!(".{}", ext);
+            let mut encoded_buf = opencv::core::Vector::<u8>::new();
+            imgcodecs::imencode(&enc_ext, &out_mat, &mut encoded_buf, &opencv::core::Vector::new())
+                .map_err(|e| format!("Failed to encode output: {}", e))?;
+            std::fs::write(&out_path, encoded_buf.as_slice())
                 .map_err(|e| format!("Failed to save output: {}", e))?;
+
+            let out_path_str = out_path.to_string_lossy().to_string();
 
             Ok(out_path_str)
         }
