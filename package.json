@@ -10,6 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@img-comparison-slider/react": "^8.0.2",
     "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-select": "^2.2.6",
