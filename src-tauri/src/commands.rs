@@ -1,4 +1,5 @@
 use log::{error, info};
+use tauri::Emitter;
 use std::sync::Mutex;
 use tauri::path::BaseDirectory;
 use tauri::Manager;
@@ -19,6 +20,7 @@ impl Default for ProcessingState {
 #[tauri::command]
 pub async fn upscale_image(
     handle: tauri::AppHandle,
+    imageId: String,
     input_path: String,
     model_filename: String,
     base_scale: f64,
@@ -45,6 +47,7 @@ pub async fn upscale_image(
         let model_filename = model_filename.clone();
         let token = token.clone();
         let handle = handle.clone();
+        let image_id = imageId.clone();
 
         let output_dir = if output_dir == "." {
             std::path::Path::new(&input_path)
@@ -59,6 +62,7 @@ pub async fn upscale_image(
             use moss_model::{RealEsrgan, SrPipeline};
             use opencv::imgcodecs;
             use std::path::{Path, PathBuf};
+            use serde_json::json;
 
             let resolve_model_path =
                 |h: &tauri::AppHandle, filename: &str| -> Result<PathBuf, String> {
@@ -79,6 +83,13 @@ pub async fn upscale_image(
             let model = RealEsrgan::from_path(&model_path_resolved)
                 .map_err(|e| format!("Failed to load model: {}", e))?;
             let mut pipeline = SrPipeline::new(Box::new(model), base_scale);
+            let h_for_emit = handle.clone();
+            pipeline.set_progress_callback(move |p| {
+                let _ = h_for_emit.emit(
+                    "processing_progress",
+                    json!({ "imageId": image_id, "progress": (p.clamp(0.0, 1.0) * 100.0).round() as i32 }),
+                );
+            });
 
             let out_mat = pipeline
                 .run_to_scale(input_mat, target_scale.max(1.0), &token)

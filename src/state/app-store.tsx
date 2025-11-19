@@ -15,6 +15,7 @@ export type ImageItem = {
   src: string;
   name: string;
   status: ImageStatus;
+  progress?: number;
   path?: string;
   file?: File;
   resultPath?: string;
@@ -33,6 +34,7 @@ type Action =
   | { type: "REMOVE_IMAGE"; payload: string }
   | { type: "SET_IMAGE_STATUS"; payload: { id: string; status: ImageStatus } }
   | { type: "SET_IMAGE_OUTPUT"; payload: { id: string; outPath?: string; src?: string } }
+  | { type: "SET_IMAGE_PROGRESS"; payload: { id: string; progress: number } }
   | { type: "RESET_IMAGE_STATUSES" };
 
 const initialState: State = {
@@ -90,10 +92,17 @@ function reducer(state: State, action: Action): State {
         }),
       };
     }
+    case "SET_IMAGE_PROGRESS":
+      return {
+        ...state,
+        images: state.images.map((i) =>
+          i.id === action.payload.id ? { ...i, progress: action.payload.progress } : i
+        ),
+      };
     case "RESET_IMAGE_STATUSES":
       return {
         ...state,
-        images: state.images.map((i) => ({ ...i, status: "ready" })),
+        images: state.images.map((i) => ({ ...i, status: "ready", progress: 0 })),
       };
     default:
       return state;

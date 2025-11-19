@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useAppStore, type ImageItem } from "@/state/app-store";
 import { processImage, cancelProcessing } from "@/lib/image";
+import { listen, type Event } from "@tauri-apps/api/event";
 
 export type ProcessingOptions = {
   outputDir?: string;
@@ -23,7 +24,14 @@ export function useProcessing() {
       stopRequestedRef.current = false;
       dispatch({ type: "RESET_IMAGE_STATUSES" });
       dispatch({ type: "SET_PROCESSING", payload: true });
+      let unlistenFn: (() => void) | null = null;
       try {
+        unlistenFn = await listen("processing_progress", (evt: Event<{ imageId: string; progress: number }>) => {
+          const payload = evt.payload as { imageId: string; progress: number };
+          if (payload) {
+            dispatch({ type: "SET_IMAGE_PROGRESS", payload: { id: payload.imageId, progress: payload.progress } });
+          }
+        });
         const items = [...state.images];
         for (const img of items) {
           if (stopRequestedRef.current) {
@@ -56,6 +64,9 @@ export function useProcessing() {
         }
       } finally {
         dispatch({ type: "SET_PROCESSING", payload: false });
+        if (typeof unlistenFn === "function") {
+          try { unlistenFn(); } catch {}
+        }
         console.info("[Moss] processing finished");
       }
     },

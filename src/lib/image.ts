@@ -23,6 +23,7 @@ export async function processImage(
     if (!outputDir) return {src: item.src};
 
     const outPath = await invoke<string>("upscale_image", {
+        imageId: item.id,
         inputPath: inputPath,
         modelFilename: meta.fileName,
         baseScale: meta.baseScale,

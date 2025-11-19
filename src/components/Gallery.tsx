@@ -93,6 +93,9 @@ function GalleryItem({item, onClick, onRemove}: {
                   }
                   style={{transition: "background-color 200ms ease"}}
                 />
+                {item.status === "processing" && (
+                  <span className="text-muted-foreground">{Math.round(item.progress ?? 0)}%</span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Button
