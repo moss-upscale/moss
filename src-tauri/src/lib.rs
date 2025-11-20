@@ -61,6 +61,17 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             {
                 main_window.set_traffic_lights_inset(16.0, 20.0).unwrap();
+                window_vibrancy::apply_vibrancy(
+                    &main_window,
+                    window_vibrancy::NSVisualEffectMaterial::HudWindow,
+                    None,
+                    None,
+                )
+                .unwrap();
+            }
+            #[cfg(target_os = "windows")]
+            {
+                window_vibrancy::apply_mica(&main_window, Some(true)).unwrap();
             }
 
             Ok(())

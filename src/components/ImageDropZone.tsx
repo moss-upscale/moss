@@ -93,8 +93,8 @@ export function ImageDropZone({ onAdd }: Props) {
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         className={cn(
-          "flex flex-col items-center justify-center text-center rounded-md border border-dashed border-border/40 p-16 space-y-7 max-w-xl w-full",
-          isDragging && "bg-muted/10",
+          "flex flex-col items-center justify-center text-center rounded-[var(--radius)] border border-dashed border-sidebar-border/40 p-16 space-y-7 max-w-xl w-full bg-card/25 supports-[backdrop-filter]:bg-card/35 backdrop-blur-xl shadow-sm",
+          isDragging && "bg-card/35 backdrop-blur-2xl",
         )}
         initial={{ y: 6 }}
         animate={{ y: 0 }}
@@ -108,7 +108,11 @@ export function ImageDropZone({ onAdd }: Props) {
         </motion.span>
         <div className="text-xl font-medium">{t("dropzone.prompt")}</div>
         <div className="flex items-center gap-4">
-          <Button size="lg" onClick={onSelectFiles}>
+          <Button
+            size="lg"
+            onClick={onSelectFiles}
+            className="ring-1 ring-white/10 border border-white/15 !bg-white/10 supports-[backdrop-filter]:!bg-white/15 backdrop-blur-md text-foreground/90 shadow-sm transition-transform active:scale-[0.98] hover:!bg-white/20"
+          >
             <ImagePlus className="size-4 mr-2" />
             {t("dropzone.addImages")}
           </Button>

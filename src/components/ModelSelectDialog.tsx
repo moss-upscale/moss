@@ -21,6 +21,8 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
   const {available, downloading, download} = useModelAvailability(models, open);
   const {t} = useTranslation();
   const close = () => setOpen(false);
+  const overlayBg = "absolute inset-0 bg-sidebar/20 supports-[backdrop-filter]:bg-sidebar/35 backdrop-blur-xl backdrop-saturate-150";
+  const modalCard = "w-[min(90vw,700px)] md:w-[min(88vw,660px)] max-h-[80vh] rounded-[var(--radius)] border border-sidebar-border/40 bg-card/35 backdrop-blur-xl shadow-lg";
   const currentLabel = useMemo(() => {
     const found = models.find((m) => m.id === selectedId);
     if (found) return t(`models.${found.id}.name`, {defaultValue: found.id});
@@ -55,7 +57,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
         aria-expanded={open}
         onClick={() => setOpen(true)}
         className={cn(
-          "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background transition-transform active:translate-y-[1px] focus:outline-none focus:ring-1 focus:ring-ring [&>span]:line-clamp-1",
+          "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-[var(--radius)] border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background transition-transform active:translate-y-[1px] focus:outline-none focus:ring-1 focus:ring-ring [&>span]:line-clamp-1",
           !selectedId && "text-muted-foreground",
         )}
       >
@@ -73,7 +75,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
             exit={{opacity: 0}}
           >
             <motion.div
-              className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+              className={overlayBg}
               onClick={close}
               initial={{opacity: 0}}
               animate={{opacity: 1}}
@@ -87,27 +89,27 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
               onClick={close}
             >
               <motion.div
-                className="w-[min(90vw,700px)] md:w-[min(88vw,660px)] max-h-[80vh] rounded-xl border border-border bg-card/95 shadow-lg"
+                className={modalCard}
                 onClick={(e) => e.stopPropagation()}
                 initial={{opacity: 0, y: 10, scale: 0.98}}
                 animate={{opacity: 1, y: 0, scale: 1}}
                 exit={{opacity: 0, y: 6, scale: 0.98}}
                 transition={{type: "spring", stiffness: 260, damping: 22}}
               >
-                <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/40">
+                <div className="flex items-center justify-between px-3 py-2.5 border-b border-sidebar-border/30">
                   <div className="text-base font-semibold">{t("model.select.label")}</div>
                   <Button
                     variant="ghost"
                     size="icon"
                     aria-label={t("common.close")}
-                    className="h-9 w-9 rounded-md"
+                    className="h-9 w-9"
                     onClick={close}
                   >
                     <X className="size-4"/>
                   </Button>
                 </div>
 
-                <div className="p-3 sm:p-4 overflow-y-auto" style={{maxHeight: "calc(80vh - 44px)"}}>
+                <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(80vh-44px)]">
                   <div className="grid grid-cols-1 gap-3 items-stretch">
                     {models.map((m) => {
                       const active = m.id === selectedId;
@@ -116,7 +118,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
                         <Card
                           key={m.id}
                           className={cn(
-                            "cursor-pointer select-none border-border/40 bg-card/90 transition hover:bg-card/95 hover:border-border/70 hover:shadow-md active:translate-y-[1px]",
+                            "cursor-pointer select-none border-sidebar-border/40 bg-card/25 supports-[backdrop-filter]:bg-card/35 backdrop-blur-lg transition hover:bg-card/35 hover:border-sidebar-border/60 hover:shadow-md active:translate-y-[1px]",
                             "flex flex-col h-full",
                             active && "ring-2 ring-primary/60 border-primary/50",
                           )}
@@ -139,7 +141,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
                             </p>
                             <div className="flex flex-wrap gap-2 sm:self-start">
                               {scene ? (
-                                <Badge variant="outline" className="border-border/50">
+                                <Badge variant="outline" className="border-sidebar-border/40 bg-card/15">
                                   {t(`models.scenes.${scene}`, {defaultValue: scene})}
                                 </Badge>
                               ) : null}
@@ -151,7 +153,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
                                   : (downloading[m.id]
                                     ? t("model.downloading", {defaultValue: "Downloading…"})
                                     : t("model.download", {defaultValue: "Download"}))}
-                                className="h-8 w-8"
+                                className="h-8 w-8 border-sidebar-border/40 bg-card/20 hover:bg-card/30 text-muted-foreground"
                                 disabled={available[m.id] || downloading[m.id]}
                                 onClick={(e) => {
                                   e.stopPropagation();

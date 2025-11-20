@@ -12,6 +12,7 @@ pub fn init_main_window(app: &tauri::App) -> tauri::Result<WebviewWindow> {
     #[cfg(target_os = "macos")]
     {
         builder = builder
+            .transparent(true)
             .hidden_title(true)
             .title_bar_style(tauri::TitleBarStyle::Overlay)
     }

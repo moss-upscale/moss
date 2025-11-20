@@ -95,7 +95,7 @@ function AppInner() {
               />
             </motion.div>
           ) : (
-            <ScrollArea className="h-full w-full rounded-md">
+            <ScrollArea className="h-full w-full rounded-[var(--radius)]">
               <motion.div
                 key="gallery"
                 className="min-h-full p-4"

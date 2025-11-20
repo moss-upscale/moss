@@ -15,20 +15,6 @@ export type GalleryProps = {
   onRemove: (id: string) => void;
 };
 
-function StatusBadge({status, label}: { status: ImageItem["status"]; label: string }) {
-  return (
-    <motion.div
-      key={`badge-${status}`}
-      className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/45 text-white text-xs shadow-sm ring-1 ring-white/10 backdrop-blur-sm"
-      initial={{opacity: 0}}
-      animate={{opacity: 1}}
-      exit={{opacity: 0}}
-    >
-      {label}
-    </motion.div>
-  );
-}
-
 function GalleryItem({item, onClick, onRemove}: {
   item: ImageItem;
   onClick?: () => void;
@@ -47,10 +33,11 @@ function GalleryItem({item, onClick, onRemove}: {
       whileHover={{scale: 1.015}}
       style={{contentVisibility: "auto", containIntrinsicSize: "200px 100px"}}
     >
-      <Card className="group bg-card/95 border-border/15 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+      <Card
+        className="group rounded-[var(--radius)] overflow-hidden transition hover:shadow-lg bg-card/25 supports-[backdrop-filter]:bg-card/35 backdrop-blur-lg border border-sidebar-border/40 ring-1 ring-white/10">
         <CardContent className="p-0">
           <div
-            className="aspect-[2/1] w-full bg-muted/10 relative"
+            className="aspect-[16/10] w-full bg-transparent relative"
             role={clickable ? "button" : undefined}
             aria-haspopup={clickable ? "dialog" : undefined}
             aria-label={item.name}
@@ -70,47 +57,47 @@ function GalleryItem({item, onClick, onRemove}: {
               transition={{duration: 0.24}}
               whileHover={{scale: 1.03}}
             />
-            <AnimatePresence mode="wait">
-              {item.status === "processing" && (
-                <StatusBadge status={item.status} label={t("status.processing")}/>
-              )}
-              {item.status === "complete" && (
-                <StatusBadge status={item.status} label={t("status.complete")}/>
-              )}
-            </AnimatePresence>
-          </div>
-          <div className="px-4 py-2 bg-card/85 border-t border-border/25">
-            <div className="text-base font-medium text-foreground truncate">{item.name}</div>
-            <div className="mt-1.5 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <span
-                  className={
-                    `size-2 rounded-full ` +
-                    (item.status === "complete"
-                      ? "bg-green-400"
-                      : item.status === "processing"
-                        ? "bg-blue-400 animate-pulse"
-                        : item.status === "ready"
-                          ? "bg-zinc-400/60"
-                          : "bg-red-500")
-                  }
-                  style={{transition: "background-color 200ms ease"}}
-                />
-                {item.status === "processing" && (
-                  <span className="text-muted-foreground">{Math.round(item.progress ?? 0)}%</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("common.deleteFile")}
-                  className="h-6 w-6 rounded-md bg-card/30 hover:bg-card/40 border border-border/20 text-foreground/80 transition-transform active:scale-[0.98]"
-                  onClick={() => onRemove(item.id)}
-                  disabled={item.status !== "ready"}
-                >
-                  <Trash2 className="size-3"/>
-                </Button>
+
+            <div className="absolute inset-x-0 bottom-0 p-2">
+              <div
+                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/35 backdrop-blur-md px-3 py-2 transition-colors group-hover:bg-black/40">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="text-sm font-medium text-foreground truncate">
+                    {item.name}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span
+                      className={
+                        `size-2 rounded-full transition-colors duration-200 ` +
+                        (item.status === "complete"
+                          ? "bg-green-400"
+                          : item.status === "processing"
+                            ? "bg-blue-400 animate-pulse"
+                            : item.status === "ready"
+                              ? "bg-zinc-400/60"
+                              : "bg-red-500")
+                      }
+                    />
+                    {item.status === "processing" && (
+                      <span className="text-muted-foreground">{Math.round(item.progress ?? 0)}%</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("common.deleteFile")}
+                    className="h-7 w-7 bg-white/10 hover:bg-white/20 text-foreground/85 transition-transform active:scale-[0.98] border-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(item.id);
+                    }}
+                    disabled={item.status !== "ready"}
+                  >
+                    <Trash2 className="size-3"/>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -159,7 +146,7 @@ function CompareModal({selected, origSrc, resultSrc, onClose}: {
   return createPortal(
     <motion.div className="fixed inset-0 z-50" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
       <motion.div
-        className="absolute inset-0 bg-black/45 backdrop-blur-md"
+        className="absolute inset-0 bg-sidebar/20 supports-[backdrop-filter]:bg-sidebar/35 backdrop-blur-xl backdrop-saturate-150"
         onClick={onClose}
         initial={{opacity: 0}}
         animate={{opacity: 1}}
@@ -173,21 +160,21 @@ function CompareModal({selected, origSrc, resultSrc, onClose}: {
         onClick={onClose}
       >
         <motion.div
-          className="w-[min(98vw,1200px)] max-h-[92vh] rounded-xl border border-border bg-card/70 backdrop-blur-xl shadow-lg overflow-hidden"
+          className="w-[min(98vw,1200px)] max-h-[92vh] rounded-[var(--radius)] border border-sidebar-border/40 bg-card/35 backdrop-blur-xl shadow-lg overflow-hidden"
           onClick={(e) => e.stopPropagation()}
           initial={{opacity: 0, y: 10, scale: 0.98}}
           animate={{opacity: 1, y: 0, scale: 1}}
           exit={{opacity: 0, y: 6, scale: 0.98}}
           transition={{type: "spring", stiffness: 260, damping: 22}}
         >
-          <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/40">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-sidebar-border/30">
             <div className="text-base font-semibold truncate mr-2">{selected.name}</div>
-            <Button variant="ghost" size="icon" aria-label={t("common.close")} className="h-9 w-9 rounded-md"
+            <Button variant="ghost" size="icon" aria-label={t("common.close")} className="h-9 w-9"
                     onClick={onClose}>
               <X className="size-4"/>
             </Button>
           </div>
-          <div className="p-3 flex items-center justify-center" style={{maxHeight: "calc(92vh - 44px)"}}>
+          <div className="p-3 flex items-center justify-center max-h-[calc(92vh-44px)]">
             <ImgComparisonSlider
               tabIndex={-1}
               className="outline-none ring-0 focus:outline-none focus:ring-0 border-0"

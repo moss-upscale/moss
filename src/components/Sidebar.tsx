@@ -50,11 +50,11 @@ export function Sidebar(
   const {t} = useTranslation();
   const appVersion = useAppVersion();
   return (
-    <aside className="w-80 h-full shrink-0 border-r border-border bg-sidebar/95 p-4 flex flex-col overflow-y-auto">
-      <div style={{marginTop: "24px"}} className="space-y-4">
-        <h1 style={{marginLeft: "4px"}} className="text-lg font-semibold tracking-tight">{t("app.title")}</h1>
+    <aside className="w-80 h-full shrink-0 border-r border-sidebar-border/40 bg-sidebar/20 supports-[backdrop-filter]:bg-sidebar/35 backdrop-blur-xl backdrop-saturate-150 p-4 flex flex-col overflow-y-auto shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="space-y-4 mt-6">
+        <h1 className="text-lg font-semibold tracking-tight ml-1">{t("app.title")}</h1>
 
-        <Card className="bg-card border border-border/20">
+        <Card className="bg-card/30 border border-sidebar-border/30 shadow-none">
           <CardHeader>
             <CardTitle className="text-base">{t("model.title")}</CardTitle>
           </CardHeader>
@@ -91,7 +91,7 @@ export function Sidebar(
       </div>
 
       <div
-        className="mt-auto border-t border-border/20 pt-3 flex items-center justify-between text-xs text-muted-foreground">
+        className="mt-auto border-t border-sidebar-border/30 pt-3 flex items-center justify-between text-xs text-muted-foreground">
         <span>{appVersion ? `v${appVersion}` : ""}</span>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
