@@ -1,5 +1,7 @@
 {
-  "app": { "title": "Moss Upscaler" },
+  "app": {
+    "title": "Moss Upscaler"
+  },
   "common": {
     "source": "Source",
     "notSelected": "Not selected",
@@ -9,15 +11,34 @@
     "stopProcessing": "Stop",
     "clearAll": "Clear All"
   },
-  "language": { "label": "Language", "en": "English", "zh": "中文" },
-  "status": { "complete": "Complete", "processing": "Processing", "ready": "Ready", "error": "Error" },
-  "model": { "title": "Model", "select": { "label": "Select Model" } },
-  "sidebar": { "scale": { "title": "Scale", "current": "Current: {{value}}x" } },
+  "status": {
+    "complete": "Complete",
+    "processing": "Processing",
+    "ready": "Ready",
+    "error": "Error"
+  },
+  "model": {
+    "title": "Model",
+    "select": {
+      "label": "Select Model"
+    }
+  },
+  "sidebar": {
+    "scale": {
+      "title": "Scale",
+      "current": "Current: {{value}}x"
+    }
+  },
   "output": {
     "title": "Output",
     "location": "Location",
-    "select": { "placeholder": "Select output location" },
-    "locationOptions": { "original": "Original image folder", "custom": "Custom output directory" },
+    "select": {
+      "placeholder": "Select output location"
+    },
+    "locationOptions": {
+      "original": "Original image folder",
+      "custom": "Custom output directory"
+    },
     "directory": "Directory",
     "openDirAria": "Open directory",
     "overwriteOriginals": "Overwrite originals"
@@ -41,6 +62,9 @@
       "name": "Real-ESRGAN Anime x4+",
       "description": "x4 model optimized for anime/illustrations."
     },
-    "scenes": { "general": "General", "anime": "Anime" }
+    "scenes": {
+      "general": "General",
+      "anime": "Anime"
+    }
   }
 }

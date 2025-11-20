@@ -49,7 +49,9 @@ pub fn run() {
         .manage(commands::ProcessingState::default())
         .invoke_handler(tauri::generate_handler![
             commands::upscale_image,
-            commands::cancel_upscale
+            commands::cancel_upscale,
+            commands::check_model_available,
+            commands::download_model
         ])
         .setup(|app| {
             info!("moss app starting");

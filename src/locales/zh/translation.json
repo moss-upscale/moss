@@ -1,5 +1,4 @@
 {
-  
   "common": {
     "source": "源码",
     "notSelected": "未选择",
@@ -9,15 +8,34 @@
     "stopProcessing": "停止",
     "clearAll": "清空全部"
   },
-  "language": { "label": "语言", "en": "English", "zh": "中文" },
-  "status": { "complete": "完成", "processing": "处理中", "ready": "就绪", "error": "错误" },
-  "model": { "title": "模型", "select": { "label": "选择模型" } },
-  "sidebar": { "scale": { "title": "放大倍数", "current": "当前：{{value}}x" } },
+  "status": {
+    "complete": "完成",
+    "processing": "处理中",
+    "ready": "就绪",
+    "error": "错误"
+  },
+  "model": {
+    "title": "模型",
+    "select": {
+      "label": "选择模型"
+    }
+  },
+  "sidebar": {
+    "scale": {
+      "title": "放大倍数",
+      "current": "当前：{{value}}x"
+    }
+  },
   "output": {
     "title": "输出",
     "location": "位置",
-    "select": { "placeholder": "选择输出位置" },
-    "locationOptions": { "original": "原图所在目录", "custom": "自定义输出目录" },
+    "select": {
+      "placeholder": "选择输出位置"
+    },
+    "locationOptions": {
+      "original": "原图所在目录",
+      "custom": "自定义输出目录"
+    },
     "directory": "目录",
     "openDirAria": "打开目录",
     "overwriteOriginals": "覆盖原始文件"
@@ -39,6 +57,9 @@
     "real-esrgan-anime-x4": {
       "description": "针对二次元/动漫线条与平涂优化的 x4 模型。"
     },
-    "scenes": { "general": "通用", "anime": "动漫" }
+    "scenes": {
+      "general": "通用",
+      "anime": "动漫"
+    }
   }
 }

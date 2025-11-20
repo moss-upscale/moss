@@ -1,0 +1,8 @@
+{
+  "bundle": {
+    "resources": {
+      "../models/*": null,
+      "libs": "."
+    }
+  }
+}
