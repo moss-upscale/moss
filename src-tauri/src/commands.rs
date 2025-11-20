@@ -179,13 +179,16 @@ pub async fn check_model_available(
     handle: tauri::AppHandle,
     model_filename: String,
 ) -> Result<bool, String> {
-    let res = resource_model_path(&handle, &model_filename)?;
-    if res.exists() {
-        return Ok(true);
+    let candidates = [
+        resource_model_path(&handle, &model_filename)?,
+        user_models_base_dir(&handle)?.join(&model_filename),
+    ];
+    if let Some(found) = candidates.into_iter().find(|p| p.exists()) {
+        info!("model available locally -> {}", found.to_string_lossy());
+        Ok(true)
+    } else {
+        Ok(false)
     }
-    let base = user_models_base_dir(&handle)?;
-    let user_path = base.join(&model_filename);
-    Ok(user_path.exists())
 }
 
 #[tauri::command]

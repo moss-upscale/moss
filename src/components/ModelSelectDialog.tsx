@@ -6,10 +6,9 @@ import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import {cn} from "@/lib/utils";
 import type {Model} from "@/lib/models";
-import {invoke} from "@tauri-apps/api/core";
-import {listen} from "@tauri-apps/api/event";
 import {useTranslation} from "react-i18next";
 import {motion} from "framer-motion";
+import {useModelAvailability} from "@/hooks/useModelAvailability";
 
 type Props = {
   models: Model[];
@@ -19,9 +18,9 @@ type Props = {
 
 export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
   const [open, setOpen] = useState(false);
-  const [available, setAvailable] = useState<Record<string, boolean>>({});
-  const [downloading, setDownloading] = useState<Record<string, boolean>>({});
+  const {available, downloading, download} = useModelAvailability(models, open);
   const {t} = useTranslation();
+  const close = () => setOpen(false);
   const currentLabel = useMemo(() => {
     const found = models.find((m) => m.id === selectedId);
     if (found) return t(`models.${found.id}.name`, {defaultValue: found.id});
@@ -31,52 +30,12 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    (async () => {
-      const map: Record<string, boolean> = {};
-      for (const m of models) {
-        try {
-          map[m.id] = await invoke<boolean>("check_model_available", {
-            modelFilename: m.fileName,
-          });
-        } catch {
-          map[m.id] = false;
-        }
-      }
-      setAvailable(map);
-    })();
-  }, [open, models]);
-
-  useEffect(() => {
-    if (!open) return;
-    let unlisten: (() => void) | undefined;
-    listen("model_download_progress", (event) => {
-      const payload = event.payload as any;
-      const filename = payload?.modelFilename as string | undefined;
-      const percent = payload?.progress as number | null | undefined;
-      if (!filename) return;
-      const found = models.find((m) => m.fileName === filename);
-      if (!found) return;
-      if (typeof percent === "number" && percent >= 100) {
-        setAvailable((a) => ({...a, [found.id]: true}));
-        setDownloading((d) => ({...d, [found.id]: false}));
-      } else {
-        setDownloading((d) => ({...d, [found.id]: true}));
-      }
-    }).then((fn) => {
-      unlisten = fn;
-    });
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, [open, models]);
 
   function handleSelect(id: string) {
     onSelect(id);
@@ -84,16 +43,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
   }
 
   async function handleDownload(m: Model) {
-    try {
-      setDownloading((d) => ({...d, [m.id]: true}));
-      await invoke<string>("download_model", {
-        modelFilename: m.fileName,
-      });
-      setAvailable((a) => ({...a, [m.id]: true}));
-    } catch {
-    } finally {
-      setDownloading((d) => ({...d, [m.id]: false}));
-    }
+    await download(m);
   }
 
   return (
@@ -124,7 +74,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
           >
             <motion.div
               className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
-              onClick={() => setOpen(false)}
+              onClick={close}
               initial={{opacity: 0}}
               animate={{opacity: 1}}
               exit={{opacity: 0}}
@@ -134,7 +84,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
               aria-modal="true"
               aria-label={t("model.select.label")}
               className="absolute inset-0 flex items-center justify-center p-4"
-              onClick={() => setOpen(false)}
+              onClick={close}
             >
               <motion.div
                 className="w-[min(90vw,700px)] md:w-[min(88vw,660px)] max-h-[80vh] rounded-xl border border-border bg-card/95 shadow-lg"
@@ -151,7 +101,7 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
                     size="icon"
                     aria-label={t("common.close")}
                     className="h-9 w-9 rounded-md"
-                    onClick={() => setOpen(false)}
+                    onClick={close}
                   >
                     <X className="size-4"/>
                   </Button>
@@ -203,7 +153,13 @@ export function ModelSelectDialog({models, selectedId, onSelect}: Props) {
                                     : t("model.download", {defaultValue: "Download"}))}
                                 className="h-8 w-8"
                                 disabled={available[m.id] || downloading[m.id]}
-                                onClick={() => handleDownload(m)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownload(m);
+                                }}
+                                onKeyDown={(e) => {
+                                  e.stopPropagation();
+                                }}
                               >
                                 {available[m.id] ? (
                                   <Check className="h-4 w-4 text-primary"/>
