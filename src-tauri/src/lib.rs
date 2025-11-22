@@ -1,14 +1,66 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+use log::LevelFilter;
+
+mod commands;
+mod window;
+
+fn log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    use tauri_plugin_log::{Target, TargetKind};
+    tauri_plugin_log::Builder::new()
+        .targets([
+            Target::new(TargetKind::Stdout),
+            Target::new(TargetKind::LogDir { file_name: None }),
+        ])
+        .level(if cfg!(debug_assertions) {
+            LevelFilter::Debug
+        } else {
+            LevelFilter::Info
+        })
+        .max_file_size(1024 * 1024 * 10)
+        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+        .build()
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
+fn prevent_default_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    if cfg!(debug_assertions) {
+        tauri_plugin_prevent_default::debug()
+    } else {
+        tauri_plugin_prevent_default::init()
+    }
+}
+
 pub fn run() {
+    use log::info;
+    use tauri::Manager;
+
     tauri::Builder::default()
+        .plugin(log_plugin())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(win) = app.get_webview_window(window::MAIN_WINDOW_LABEL) {
+                win.set_focus().unwrap();
+            }
+        }))
+        .plugin(tauri_plugin_decorum::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .plugin(tauri_plugin_notification::init())
+        .plugin(prevent_default_plugin())
+        .manage(commands::ProcessingState::default())
+        .invoke_handler(tauri::generate_handler![
+            commands::upscale_image,
+            commands::cancel_upscale,
+            commands::check_model_available,
+            commands::download_model,
+            commands::open_settings_window
+        ])
+        .setup(|app| {
+            info!("moss app starting");
+            window::init_main_window(app).expect("failed to create main window");
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

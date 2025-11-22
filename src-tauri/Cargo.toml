@@ -1,8 +1,8 @@
 [package]
 name = "moss"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "A SR Gui desktop app."
+authors = ["Lortunate"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -18,8 +18,41 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
+tauri-plugin-decorum = "1.1.1"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-log = "2"
+log = "0.4"
+tauri-plugin-single-instance = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-prevent-default = "4"
+tauri-plugin-notification = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+opencv = { version = "0.97.0", default-features = false, features = ["imgcodecs", "imgproc"] }
+moss-model = { path = "../moss-model" }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+tauri-plugin-store = "2"
 
+[target."cfg(target_os = \"macos\")".dependencies]
+# Use Cocoa APIs to set NSWindow background color on macOS
+cocoa = "0.26.1"
+moss-model = { path = "../moss-model", features = ["macos"] }
+
+[target."cfg(target_os = \"windows\")".dependencies]
+moss-model = { path = "../moss-model", features = ["windows"] }
+
+[target."cfg(target_os = \"linux\")".dependencies]
+moss-model = { path = "../moss-model", features = ["linux"] }
+
+[profile.dev]
+incremental = true
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

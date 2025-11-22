@@ -1,0 +1,101 @@
+{
+  "app": {
+    "title": "Moss Upscaler"
+  },
+  "common": {
+    "source": "Source",
+    "notSelected": "Not selected",
+    "close": "Close",
+    "deleteFile": "Delete file",
+    "startProcessing": "Start Processing",
+    "stopProcessing": "Stop",
+    "clearAll": "Clear All"
+  },
+  "status": {
+    "complete": "Complete",
+    "processing": "Processing",
+    "ready": "Ready",
+    "error": "Error"
+  },
+  "model": {
+    "title": "Model",
+    "select": {
+      "label": "Select Model"
+    }
+  },
+  "sidebar": {
+    "scale": {
+      "title": "Scale",
+      "current": "Current: {{value}}x"
+    }
+  },
+  "settings": {
+    "nav": {
+      "appearance": "Appearance"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "theme": {
+        "label": "Theme",
+        "description": "Select application theme",
+        "placeholder": "Select theme"
+      },
+      "mode": {
+        "label": "Appearance Mode",
+        "description": "Choose light, dark or follow system",
+        "placeholder": "Select mode",
+        "options": {
+          "system": "System",
+          "light": "Light",
+          "dark": "Dark"
+        }
+      },
+      "language": {
+        "label": "Language",
+        "description": "Select display language",
+        "placeholder": "Select language",
+        "options": {
+          "system": "System"
+        }
+      }
+    }
+  },
+  "output": {
+    "title": "Output",
+    "location": "Location",
+    "select": {
+      "placeholder": "Select output location"
+    },
+    "locationOptions": {
+      "original": "Original image folder",
+      "custom": "Custom output directory"
+    },
+    "directory": "Directory",
+    "openDirAria": "Open directory",
+    "overwriteOriginals": "Overwrite originals"
+  },
+  "dropzone": {
+    "prompt": "Drag images here, or click to add",
+    "addImages": "Add images",
+    "importFromFolder": "Import from folder",
+    "ignoredNonImages": "{{count}} non-image files ignored",
+    "emptyOrUnsupported": "Directory is empty or contains no supported image files",
+    "addedNFiles": "Added {{count}} files",
+    "readDirFailed": "Failed to read directory. Please check permissions or path.",
+    "scanningDir": "Scanning directory…"
+  },
+  "models": {
+    "real-esrgan-x4": {
+      "name": "Real-ESRGAN x4+",
+      "description": "High-fidelity general x4 upscaler for most photo scenes."
+    },
+    "real-esrgan-anime-x4": {
+      "name": "Real-ESRGAN Anime x4+",
+      "description": "x4 model optimized for anime/illustrations."
+    },
+    "scenes": {
+      "general": "General",
+      "anime": "Anime"
+    }
+  }
+}
