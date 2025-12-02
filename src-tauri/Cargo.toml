@@ -35,6 +35,8 @@ opencv = { version = "0.97.0", default-features = false, features = ["imgcodecs"
 moss-model = { path = "../moss-model" }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
 tauri-plugin-store = "2"
+walkdir = "2.5.0"
+infer = "0.19.0"
 
 [target."cfg(target_os = \"macos\")".dependencies]
 # Use Cocoa APIs to set NSWindow background color on macOS

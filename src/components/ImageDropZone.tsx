@@ -31,13 +31,14 @@ export function ImageDropZone({ onAdd }: Props) {
 
   const addFromPaths = useCallback(
     async (paths: string[]) => {
-      const files = paths.filter(isImagePath);
-      if (files.length > 0) {
-        await addInBatches(files);
+      const flags = await Promise.all(paths.map((p) => isImagePath(p)));
+      const imagePaths = paths.filter((_, i) => flags[i]);
+      if (imagePaths.length > 0) {
+        await addInBatches(imagePaths);
       }
 
-      const maybeDirs = paths.filter((p) => !isImagePath(p));
-      for (const dir of maybeDirs) {
+      const nonImagePaths = paths.filter((_, i) => !flags[i]);
+      for (const dir of nonImagePaths) {
         try {
           const images = await collectImagePathsRecursive(dir);
           if (images.length > 0) {

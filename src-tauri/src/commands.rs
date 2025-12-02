@@ -9,6 +9,7 @@ use tauri::path::BaseDirectory;
 use tauri::Emitter;
 use tauri::Manager;
 use tauri::State;
+use crate::images;
 
 pub struct ProcessingState {
     pub token: Mutex<Option<moss_model::CancellationToken>>,
@@ -360,8 +361,35 @@ pub async fn cancel_upscale(state: State<'_, ProcessingState>) -> Result<(), Str
 }
 #[tauri::command]
 pub fn open_settings_window(handle: tauri::AppHandle) -> Result<(), String> {
-    let win = handle.get_webview_window(SETTINGS_WINDOW_LABEL).unwrap();
-    win.show().unwrap();
-    win.set_focus().unwrap();
-    Ok(())
+    if let Some(win) = handle.get_webview_window(SETTINGS_WINDOW_LABEL) {
+        win.show().map_err(|e| format!("show window error: {}", e))?;
+        win.set_focus().map_err(|e| format!("focus window error: {}", e))?;
+        Ok(())
+    } else {
+        Err("settings window not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn is_image_file(path: String) -> Result<bool, String> {
+    let p = PathBuf::from(&path);
+    if !p.is_file() {
+        return Ok(false);
+    }
+    let res = tauri::async_runtime::spawn_blocking(move || images::detect_image_magic(&p))
+        .await
+        .map_err(|e| format!("spawn_blocking join error: {}", e))?;
+    Ok(res)
+}
+
+#[tauri::command]
+pub async fn list_images(root_dir: String) -> Result<Vec<String>, String> {
+    let root = PathBuf::from(&root_dir);
+    if !root.exists() || !root.is_dir() {
+        return Err("invalid directory".to_string());
+    }
+    let res = tauri::async_runtime::spawn_blocking(move || images::walk_and_collect_images(&root))
+    .await
+    .map_err(|e| format!("spawn_blocking join error: {}", e))?;
+    Ok(res)
 }

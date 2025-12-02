@@ -1,6 +1,7 @@
 use log::LevelFilter;
 
 mod commands;
+mod images;
 mod window;
 
 fn log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
@@ -49,11 +50,13 @@ pub fn run() {
         .plugin(prevent_default_plugin())
         .manage(commands::ProcessingState::default())
         .invoke_handler(tauri::generate_handler![
-            commands::upscale_image,
-            commands::cancel_upscale,
+            commands::is_image_file,
+            commands::list_images,
             commands::check_model_available,
             commands::download_model,
-            commands::open_settings_window
+            commands::upscale_image,
+            commands::cancel_upscale,
+            commands::open_settings_window,
         ])
         .setup(|app| {
             info!("moss app starting");
